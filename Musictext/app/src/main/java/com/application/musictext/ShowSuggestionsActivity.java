@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -16,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -56,12 +58,20 @@ public class ShowSuggestionsActivity extends ActionBarActivity {
                 String [] splittedLine = line.split(";");
 
                 if(splittedLine[4].length()>=1) {
+                    int matchedTags = 0;
                     for(int t:tags){
+                        matchedTags = 0;
                         if(splittedLine[4].contains(""+t)){
                             //Traccia da suggerire
-                            trackList.add(new Track(splittedLine[3],splittedLine[1]));
-                            break;
+                            matchedTags++;
+                            //trackList.add(new Track(splittedLine[3],splittedLine[1]));
+                            //break;
                         }
+                    }
+                    if(matchedTags>0) {
+                        double rank = (double) matchedTags/tags.length;
+                        Log.d("Rank", "Matched tags: "+matchedTags+" Overall tags: "+tags.length+" Rank: "+rank);
+                        trackList.add(new Track(splittedLine[3], splittedLine[1],rank));
                     }
                 }
 
@@ -74,10 +84,32 @@ public class ShowSuggestionsActivity extends ActionBarActivity {
 
         ListView suggestList = (ListView) this.findViewById(R.id.suggest_list);
         List<String> valuesPrint = new ArrayList<String>();
-        for(Track track:trackList){
-            valuesPrint.add("Nome: "+track.getName()+"\n Artist: "+track.getArtist());
+        List<Track> sortedTracks = sortTracksByRank(trackList);
+        for(Track track:sortedTracks){
+            valuesPrint.add("Nome: "+track.getName()+"\n Artist: "+track.getArtist()+"\n Rank: "+track.getRank());
         }
         setListView(valuesPrint,suggestList);
+    }
+
+    private List<Track> sortTracksByRank(List<Track> tracks){
+        List<Track> sortedTrack = new ArrayList<Track>();
+
+        Track min_track = new Track("","",Double.MIN_VALUE);
+        Track max = min_track;
+        int max_index = -1;
+        while(tracks.size() > 0) {
+            for (int i = 0; i < tracks.size(); i++) {
+                if (tracks.get(i).getRank() > max.getRank()) {
+                    max = tracks.get(i);
+                    max_index = i;
+                }
+            }
+            sortedTrack.add(max);
+            tracks.remove(max_index);
+            max = min_track;
+        }
+
+        return sortedTrack;
     }
 
     private void setListView(List<String> values, ListView listView){
