@@ -23,4 +23,6 @@
     <string name="confirm_observations">OK</string>
     <string name="suggest_title">Suggestions:</string>
     <string name="back_main_menu">Main menu</string>
+    <string name="max_artists_title">Max artists</string>
+    <string name="max_tracks">Max tracks</string>
 </resources>
